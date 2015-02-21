@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <title>Calculadora Reforma Contributiva</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="http://jqueryvalidation.org/files/demo/site-demos.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  <script src="http://jqueryvalidation.org/files/dist/jquery.validate.min.js"></script>
+<script src="http://jqueryvalidation.org/files/dist/additional-methods.min.js"></script>
+  <script>
+  
+	function ivarefund(status,income,ivapayment)
+	{
+	  if (typeof income != 'number') {
+		return null;
+	  }
+	  ivapayment -= ivapayment*2;
+	  if(income >35000)
+	  {
+		return 0;
+	  }
+	  if(income <20000)
+	  {
+		return 1*ivapayment;
+	  }
+	  if(income > 20000 && income < 35000)
+	  {
+		return 1*(ivapayment * 0.20);
+	  }
+	  return 0;
+	}
+	function newtaxbracket(status, income)
+	{
+	  if (typeof income != 'number') {
+		return null;
+	  }
+	  if(status == 'Casado')
+	  {
+		if(income <= 80000)
+		{
+		  return 0;
+		}
+		if(income > 80000 && income <= 125000)
+		{
+		  return (income-80000) * 0.15;
+		}
+		if(income > 125000 && income <= 200000)
+		{
+		  return (income-125000) * 0.20 + 6750;
+		}
+		if(income > 200000)
+		{
+		  return( income-200000) * 0.30 + 21750;
+		}
+		
+	  }else
+	  {
+		if(income <= 40000)
+		{
+		  return 0;
+		}
+		if(income > 40000 && income <= 125000)
+		{
+		  return (income-40000) * 0.15;
+		}
+		if(income > 125000 && income <= 200000)
+		{
+		  return (income-125000) * 0.20 + 12750;
+		}
+		if(income > 200000)
+		{
+		  return( income-200000) * 0.30 + 27750;
+		}
+	  }
+	  return "error"
+	};
+	function oldtaxbracket(income) {
+	  if (typeof income != 'number') {
+		return null;
+	  }
+	  if(income <= 9000)
+	  {
+		return 0;
+	  }
+	  if(income > 9000 && income <= 25000)
+	  {
+		return (income-9000) * 0.7;
+	  }
+	  if(income > 25000 && income <= 41500)
+	  {
+		return (income-25000) * 0.14 + 1120;
+	  }
+	  if(income > 41500 && income <= 61500)
+	  {
+		return( income-41500) * 0.25 + 3430;
+	  }
+	  if(income > 61500)
+	  {
+		return (income-61500) * 0.33 + 8430;
+	  }
+	  return "error"
+	  
+	}
+	$(document).ready(function(){
+		jQuery.validator.setDefaults({
+	  debug: true,
+	  success: "valid"
+	});
+	$( "#inputTax" ).validate({
+	  rules: {
+		estadoMarital: {
+		  required: true
+		},
+		ingresoBruto:
+		{
+			required: true,
+			number: true
+		},
+		totalDeducciones:
+		{
+			required: true,
+			number: true
+		},
+		totalIVU:
+		{
+			required: true,
+			number: true
+		},
+	  }
+	});
+	$("form").change(function(){
+			b3 = $("#estadoMarital").val();
+			b4 = parseInt($("#ingresoBruto").val(),10);
+			b5 = parseInt($("#totalDeducciones").val(),10);
+			
+			b8 = $("#sujetoContribucion");
+			b8.val(b4-b5);
+			b9 = $("#responsabilidadContributiva");
+			b9.val(oldtaxbracket(parseInt(b8.val(),10)));
+			b6 = parseInt($("#totalComprasIVU").val(),10);
+			
+			b11 = $("#totalIVUAnual");
+			b11.val(0);
+			b11.val(Math.round(b6*0.07));
+			b13 = $("#totalIVAAnual");
+			b13.val(0);
+			b13.val(Math.round(b6*0.16));
+			b14= $("#totalIVARembolsado");
+			b14.val(0);
+			b14.val(ivarefund(b3,b4,parseInt(b13.val(),10)));
+			b15 = $("#nuevaResponsabilidadContributiva");
+			b15.val(0);
+			b15.val(newtaxbracket(b3,b4));
+			
+			
+			b20=$("#contribucionHoy");
+			b20.val(0);
+			parseInt(b11.val(),10);
+			parseInt(b9.val(),10);
+			b20.val(parseInt(b11.val(),10)+parseInt(b9.val(),10));
+			b21=$("#contribucionReforma");
+			b21.val(0);
+			parseInt(b13.val(),10);
+			parseInt(b15.val(),10);
+			parseInt(b14.val(),10);
+			b21.val((parseInt(b14.val(),10)+parseInt(b13.val(),10))+parseInt(b15.val(),10));
+			b22=$("#diferenciaNeta");
+			b22.val(0);
+			b22.val(parseInt(b20.val(),10)-parseInt(b21.val(),10));
+			if(b22.val() > 0)
+			{
+			$("#resultDiv").css("color","green");
+				$("#result").text('Felicidades! Usted sale ganando con la reforma contributiva');
+				
+				$("#resulttIcon").removeClass();
+				$("#resulttIcon").addClass("glyphicon glyphicon-plus");
+			}else
+			{
+			$("#resultDiv").css("color","red");
+				$("#result").html('parece que usted no sale muy bien con la reforma contributiva. Pero puede ser que haya esperanza.. <br>Yo no estoy calculando ningun tipo de deduccion o exenciones Refierase a la tabla de arriba para algunas de las que no se estan calculando');
+				$("#resulttIcon").removeClass();
+				$("#resulttIcon").addClass("glyphicon glyphicon-minus");
+			}
+		});
+	});
+	</script>
+</head>
+<body>
+
+<div class="container">
+  <h1>Calculadora Reforma Contributiva</h1>
+  <b>NOTA: como no tengo todas las deducciones que se quedaran y cuanto seran. Asumi el peor de los casos que no existen deducciones POR ENDE en realidad su responsabilidad contributiva sera menor si tiene deducciones de:</b>
+  <ul class="list-group">
+  <li class="list-group-item">Intereses Hipotecarios</li>
+  <li class="list-group-item">Aportaciones a cuentas de retiro individual (que no excedan de $5,000 o $10,000 si es casado)</li>
+  <li class="list-group-item"> Gastos médicos</li>
+  <li class="list-group-item">Donativos</li>
+  <li class="list-group-item">Pérdida de propiedad por ciertas causas fortuitas</li>
+  <li class="list-group-item">Aportaciones a sistemas gubernamentales de pensiones o retiro</li>
+  <li class="list-group-item">Intereses pagados sobre préstamos estudiantiles a nivel universitario</li>
+  </ul>
+  <b>Recuerde de poner cuanto gasta al año en compras cosas que no esten exentas de IVA</b>
+<div>
+<div id="resultDiv">
+<p>
+<span id="resulttIcon" class=""></span><b id="result"></b>
+</p>
+</div>
+</div>
+  <form id="inputTax">
+	<div class="input-group"> 
+		<span class="input-group-addon">Estado Marital</span>
+		<select id="estadoMarital" class="selectpicker form-control" data-live-search="true" >
+			<option>Soltero</option>
+			<option>Casado</option>
+		</select>
+	</div>
+    <div class="input-group">
+	  <span class="input-group-addon">Ingreso Bruto Ajustado(Encasillado 1 Linea 5) $</span>
+	  <input type="text" id="ingresoBruto" class="form-control text-right" value="35000" >
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<div class="input-group">
+	  <span class="input-group-addon">Total Deducciones y Exenciones (Encasillado 2 Linea 11) $</span>
+	  <input type="text" id="totalDeducciones" class="form-control text-right"  value="7000" >
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<div class="input-group">
+	  <span class="input-group-addon">Total Anual de compras tributable/pago IVU $</span>
+	  <input type="text" id="totalComprasIVU" class="form-control text-right" value="6000" >
+	  <span class="input-group-addon">.00</span>
+	</div>
+  </form>
+	<h2>Sistema Contributivo Actual</h2>
+	<div class="input-group">
+	  <span class="input-group-addon">Ingreso Neto Sujeto a Contribucion $</span>
+	  <input type="text" id="sujetoContribucion" class="form-control text-right" value="28000" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<div class="input-group">
+	  <span class="input-group-addon">Contribucion Determinada segun tabla $</span>
+	  <input type="text" id="responsabilidadContributiva" class="form-control text-right" value="1540" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<div class="input-group">
+	  <span class="input-group-addon">Cantidad de IVU pagado Anual $</span>
+	  <input type="text" id="totalIVUAnual" class="form-control text-right" value="420" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<h2>Reforma Contributiva</h2>
+	<div class="input-group">
+	  <span class="input-group-addon">Responsabilidad Contributiva</span>
+	  <input type="text" id="nuevaResponsabilidadContributiva"" class="form-control text-right" value="0" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<div class="input-group">
+	  <span class="input-group-addon">Cantidad Anual de IVA $</span>
+	  <input type="text" id="totalIVAAnual" class="form-control text-right" value="-960" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<div class="input-group">
+	  <span class="input-group-addon">Cantidad Anual de IVA Rembolsada$</span>
+	  <input type="text" id="totalIVARembolsado" class="form-control text-right" value="960" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	
+	<h2>Resultado</h2>
+  <div class="input-group">
+	  <span class="input-group-addon">Total Pagado Sistema Contributivo Actual $</span>
+	  <input type="text" id="contribucionHoy" class="form-control text-right" value="1960" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<div class="input-group">
+	  <span class="input-group-addon">Total Pagado Reforma Contributiva $</span>
+	  <input type="text" id="contribucionReforma" class="form-control text-right" value="0" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	<div class="input-group">
+	  <span class="input-group-addon">Diferencia Neta $</span>
+	  <input type="text" id="diferenciaNeta" class="form-control text-right" value="1960" disabled>
+	  <span class="input-group-addon">.00</span>
+	</div>
+	
+  </div>
+    <p>Cualquier error informarlo a <a href="mailto:annerjb+iva@gmail.com?Subject=ReformaContributivaForm" target="_top">annerjb@gmail.com</a></p>
+
+</body>
+</html>
